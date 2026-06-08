@@ -230,7 +230,7 @@ def registrar_venta(stock, ventas):
     precio_unitario = item[2]
     if item[5] == True:
         precio_unitario = precio_unitario * 0.8
-        print(f"(Precio con descuento de oferta aplicado)")
+        print("(Precio con descuento de oferta aplicado)")
 
     total = precio_unitario * cantidad
 
@@ -239,11 +239,11 @@ def registrar_venta(stock, ventas):
     id_venta = len(ventas) + 1
     ventas.append([id_venta, producto, cantidad, precio_unitario, total])
 
-    print(f"\nVenta registrada exitosamente.")
-    print(f"  Producto : {producto}")
-    print(f"  Cantidad : {cantidad}")
-    print(f"  Precio   : ${precio_unitario:.2f} por unidad")
-    print(f"  Total    : ${total:.2f}")
+    print("\nVenta registrada exitosamente.")
+    print(f"  Producto : {producto}\n  Cantidad : {cantidad}\n  Precio   : ${precio_unitario:.2f} por unidad\n  Total    : ${total:.2f}")
+    # print(f"  Cantidad : {cantidad}")
+    # print(f"  Precio   : ${precio_unitario:.2f} por unidad")
+    # print(f"  Total    : ${total:.2f}")
 
 def resumen_ventas(ventas):
     """Muestra un resumen general: cantidad de ventas, producto más vendido y total recaudado."""
@@ -314,6 +314,7 @@ def menu_ventas(stock, ventas):
 
 def menu_stock(stock):
     """Muestra el menú de manejo de los productos."""
+
     continuar = True
 
     while continuar:
@@ -352,6 +353,7 @@ def menu_stock(stock):
 
 def menu_usuarios(usuarios):
     """Muestra el menú de manejo de usuarios."""
+    
     continuar = True
 
     while continuar:
@@ -423,6 +425,8 @@ stock = [ #nombre - descripcion - precio - stock - categoria - oferta
     ["CupHead", "Plataformero de acción clasico 2D", 19.99, 10, "plataformas", True]
 ]
 
-ventas = [] #ID - producto - cantidad - precio_unitario - total
+ventas = [ #ID - producto - cantidad - precio_unitario - total
+
+] 
 
 inicio()
