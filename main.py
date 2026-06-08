@@ -3,6 +3,106 @@
 # PROFESORES - ESCANDELL GUSTAVO MANUEL, SELLES MELINDA LUJAN
 
 import re
+import json
+
+ARCHIVO_DATOS = "datos_tienda.json"
+
+# ==================== FUNCIONES DE ARCHIVOS ====================
+
+def datos_iniciales():
+    """Devuelve los datos iniciales del sistema si no existe el archivo."""
+    usuarios_iniciales = [
+        {"id": 1, "nombre": "ag", "email": "agu@mail.com", "clave": "123", "rol": "administrador"},
+        {"id": 2, "nombre": "martina", "email": "martina@mail.com", "clave": "123", "rol": "administrador"}
+    ]
+
+    stock_inicial = [
+        {"nombre": "Hollow Knight", "descripcion": "Metroidvania tipo soulslike 2D", "precio": 4.99, "cantidad": 8, "categoria": "metroidvania", "oferta": True},
+        {"nombre": "CupHead", "descripcion": "Plataformero de accion clasico 2D", "precio": 19.99, "cantidad": 10, "categoria": "plataformas", "oferta": True}
+    ]
+
+    ventas_iniciales = []
+    transacciones_iniciales = []
+
+    return usuarios_iniciales, stock_inicial, ventas_iniciales, transacciones_iniciales
+
+
+def cargar_datos():
+    """Carga usuarios, stock, ventas y transacciones desde un archivo JSON."""
+    try:
+        archivo = open(ARCHIVO_DATOS, "r", encoding="utf-8")
+        datos = json.load(archivo)
+        archivo.close()
+
+        usuarios_cargados = datos.get("usuarios", [])
+        stock_cargado = datos.get("stock", [])
+        ventas_cargadas = datos.get("ventas", [])
+        transacciones_cargadas = datos.get("transacciones", [])
+
+        print("\nDatos cargados correctamente desde el archivo.")
+        return usuarios_cargados, stock_cargado, ventas_cargadas, transacciones_cargadas
+
+    except FileNotFoundError:
+        print("\nNo se encontro el archivo de datos. Se inicia el sistema con datos iniciales.")
+        return datos_iniciales()
+
+    except json.JSONDecodeError:
+        print("\nError: el archivo de datos esta dañado o tiene un formato incorrecto.")
+        print("Se inicia el sistema con datos iniciales para evitar que el programa se cierre.")
+        return datos_iniciales()
+
+    except OSError:
+        print("\nError al intentar leer el archivo de datos.")
+        print("Se inicia el sistema con datos iniciales.")
+        return datos_iniciales()
+
+
+def guardar_datos(usuarios, stock, ventas, transacciones):
+    """Guarda usuarios, stock, ventas y transacciones en un archivo JSON."""
+    datos = {
+        "usuarios": usuarios,
+        "stock": stock,
+        "ventas": ventas,
+        "transacciones": transacciones
+    }
+
+    try:
+        archivo = open(ARCHIVO_DATOS, "w", encoding="utf-8")
+        json.dump(datos, archivo, indent=4, ensure_ascii=False)
+        archivo.close()
+        return True
+
+    except OSError:
+        print("\nError: no se pudieron guardar los datos en el archivo.")
+        return False
+
+
+# ==================== FUNCIONES DE VALIDACION Y EXCEPCIONES ====================
+
+def pedir_entero(mensaje):
+    """Pide un numero entero y controla el ValueError si el usuario ingresa texto."""
+    while True:
+        try:
+            numero = int(input(mensaje))
+            return numero
+        except ValueError:
+            print("Error: debe ingresar un numero entero.")
+
+
+def pedir_float(mensaje):
+    """Pide un numero decimal y controla el ValueError si el usuario ingresa texto."""
+    while True:
+        try:
+            numero = float(input(mensaje))
+            return numero
+        except ValueError:
+            print("Error: debe ingresar un numero valido. Use punto para decimales.")
+
+
+def generar_id(lista):
+    """Genera un ID nuevo tomando como base el largo de la lista."""
+    return len(lista) + 1
+
 
 # ==================== FUNCIONES DE INICIO DE SESION ====================
 
@@ -12,48 +112,55 @@ def inicio():
 
     while continuar:
         print(
-            "=== Bienvenido al programa ===" \
-            "\n1. Iniciar sesión" \
+            "\n=== Bienvenido al programa ===" \
+            "\n1. Iniciar sesion" \
             "\n2. Crear usuario" \
             "\n3. Cerrar el programa"
         )
-        n = input("\nElige una opción: ")
+        n = input("\nElige una opcion: ")
 
         if n == "1":
             iniciar_sesion(usuarios, stock, ventas, transacciones)
 
         elif n == "2":
-            registrar_usuario(usuarios)
-            iniciar_sesion(usuarios, stock, ventas, transacciones)
+            registrado = registrar_usuario(usuarios)
+            if registrado:
+                iniciar_sesion(usuarios, stock, ventas, transacciones)
 
         elif n == "3":
+            guardar_datos(usuarios, stock, ventas, transacciones)
             print("\nCerrando el programa")
             continuar = False
 
         else:
             print("Dato invalido. Intente de nuevo")
 
+
 # ==================== FUNCIONES DE USUARIOS ====================
 
 def iniciar_sesion(usuarios, stock, ventas, transacciones):
-    """Permite iniciar sesion con usuario y contraseña para ingresar al apartado principal"""
+    """Permite iniciar sesion con usuario y contraseña para ingresar al apartado principal."""
 
     isUser = False
 
     print("\n=== Iniciar Sesion ===")
 
     while isUser == False:
-
         nombre = input("Ingrese nombre de usuario: ")
         clave = input("Ingrese contraseña: ")
 
         for usuario in usuarios:
-            if usuario["nombre"] == nombre and usuario["clave"] == clave:
-                isUser = True
+            try:
+                if usuario["nombre"] == nombre and usuario["clave"] == clave:
+                    isUser = True
+            except KeyError:
+                print("Error: hay un usuario cargado con datos incompletos.")
+
         if not isUser:
             print("\nEl usuario ingresado es incorrecto. Intente nuevamente\n")
 
     menu_principal(stock, ventas, usuarios, transacciones)
+
 
 def imprimir_usuarios(usuarios):
     """Imprime la lista de usuarios registrados con su ID, nombre, email y rol."""
@@ -63,45 +170,60 @@ def imprimir_usuarios(usuarios):
         return
 
     print("\n=== Usuarios registrados ===")
-    print(f"{'ID':<5} {'Nombre':<10} {'Email':<20}{'Rol':<10}")
-    print("-" * 66)
+    print(f"{'ID':<5} {'Nombre':<15} {'Email':<25}{'Rol':<15}")
+    print("-" * 60)
 
-    lista = list(map(lambda x: f"{x['id']:<5} {x['nombre']:<10} {x['email']:<20} {x['rol']:<10}", usuarios))
+    try:
+        lista = list(map(lambda x: f"{x['id']:<5} {x['nombre']:<15} {x['email']:<25} {x.get('rol', 'cliente'):<15}", usuarios))
 
-    for elemento in lista:
-        print(elemento)
+        for elemento in lista:
+            print(elemento)
+
+    except KeyError:
+        print("Error: no se pudieron imprimir los usuarios porque falta un dato obligatorio.")
+
 
 def registrar_usuario(usuarios):
     """Registra un nuevo usuario con un ID distinto a los existentes, nombre, email, clave y rol."""
 
     print("\nRegistro de nuevo usuario")
 
-    nombre = input("Nombre del usuario: ")
-    email = input("Email del usuario: ")
-    clave = input("Contraseña del usuario: ")
+    nombre = input("Nombre del usuario: ").strip()
+    email = input("Email del usuario: ").strip()
+    clave = input("Contraseña del usuario: ").strip()
+
+    if nombre == "" or email == "" or clave == "":
+        print("Error: los datos no pueden estar vacios.")
+        return False
 
     if re.match(r"^[\w\.]+@[\w\.]+\.[a-z]{2,}$", email):
         if email in emails_registrados:
             print("Ya existe un usuario registrado con ese email.")
-            return
+            return False
     else:
-        print("El email no es valido")
-        return
+        print("El email no es valido.")
+        return False
 
     clave_existente = list(filter(lambda usuario: usuario["clave"] == clave, usuarios))
     if clave_existente:
-        print("La contraseña es inválida.")
-        return
+        print("La contraseña es invalida porque ya esta siendo utilizada.")
+        return False
 
-    id_usuario = len(usuarios) + 1
+    id_usuario = generar_id(usuarios)
     usuarios.append({
         "id": id_usuario,
         "nombre": nombre,
         "email": email,
-        "clave": clave
+        "clave": clave,
+        "rol": "cliente"
     })
+
     emails_registrados.add(email)
+    guardar_datos(usuarios, stock, ventas, transacciones)
+
     print(f"Usuario '{nombre}' registrado exitosamente con ID {id_usuario}.\n")
+    return True
+
 
 # ==================== FUNCIONES DE MANEJO DE STOCK ====================
 
@@ -109,36 +231,57 @@ def lista_productos(stock):
     """Imprime la lista actual de productos."""
 
     if not stock:
-        print("\nEl stock está vacío.")
+        print("\nEl stock esta vacio.")
         return
 
     print("\n=== Stock actual ===")
     print(f"{'Producto':<20} {'Cantidad':>10} {'Precio':>10}")
     print("-" * 42)
 
-    lista = list(map(lambda x: f"{x['nombre']:<20} {x['cantidad']:>10} {x['precio']:>10.2f}", stock))
+    try:
+        lista = list(map(lambda x: f"{x['nombre']:<20} {x['cantidad']:>10} {x['precio']:>10.2f}", stock))
 
-    for elemento in lista:
-        print(elemento)
+        for elemento in lista:
+            print(elemento)
+
+    except KeyError:
+        print("Error: hay productos cargados con datos incompletos.")
+
+    except TypeError:
+        print("Error: hay precios o cantidades con tipos de datos incorrectos.")
+
 
 def agregar_stock(stock, transacciones):
-    """Agrega un producto a la lista o solo actualiza la cantidad de stock si ya existe.
+    """Agrega un producto a la lista o actualiza la cantidad si ya existe.
     Si el producto es nuevo, registra automaticamente un egreso por el costo total."""
 
     print("\n=== Agregar stock a un producto ===\n")
 
-    producto = input("Nombre del producto: ")
-    cantidad = int(input("Cantidad: "))
+    producto = input("Nombre del producto: ").strip()
+    cantidad = pedir_entero("Cantidad: ")
+
+    if producto == "":
+        print("Error: el nombre del producto no puede estar vacio.")
+        return
+
+    if cantidad <= 0:
+        print("Error: la cantidad debe ser mayor a cero.")
+        return
 
     for item in stock:
-        if item["nombre"] == producto:
+        if item["nombre"].lower() == producto.lower():
             item["cantidad"] += cantidad
-            print(f"Se ha aumentado el stock de '{producto}'. La cantidad actual es de: {item['cantidad']}")
+            guardar_datos(usuarios, stock, ventas, transacciones)
+            print(f"Se ha aumentado el stock de '{item['nombre']}'. La cantidad actual es de: {item['cantidad']}")
             return
 
-    desc = input("Descripcion del producto: ")
-    precio = float(input("Precio unitario: $"))
-    categoria = input("Categoria del producto: ")
+    desc = input("Descripcion del producto: ").strip()
+    precio = pedir_float("Precio unitario: $")
+    categoria = input("Categoria del producto: ").strip()
+
+    if precio <= 0:
+        print("Error: el precio debe ser mayor a cero.")
+        return
 
     stock.append({
         "nombre": producto,
@@ -151,7 +294,7 @@ def agregar_stock(stock, transacciones):
 
     monto_egreso = precio * cantidad
     fecha_egreso = input("Fecha de la compra (dd/mm/aaaa): ")
-    id_transaccion = len(transacciones) + 1
+    id_transaccion = generar_id(transacciones)
     transacciones.append({
         "id": id_transaccion,
         "tipo": "egreso",
@@ -160,45 +303,57 @@ def agregar_stock(stock, transacciones):
         "fecha": fecha_egreso
     })
 
+    guardar_datos(usuarios, stock, ventas, transacciones)
+
     print(f"'{producto}' ha sido agregado a la lista de productos. La cantidad actual es de: {cantidad}")
     print(f"  Egreso registrado : ${monto_egreso:.2f}")
+
 
 def eliminar_stock(stock):
     """Elimina una cantidad de stock al producto existente, y solo si hay suficiente cantidad."""
 
     print("\n=== Eliminar stock a un producto ===\n")
 
-    producto = input("Nombre del producto: ")
-    cantidad = int(input("Cantidad a eliminar: "))
+    producto = input("Nombre del producto: ").strip()
+    cantidad = pedir_entero("Cantidad a eliminar: ")
+
+    if cantidad <= 0:
+        print("Error: la cantidad debe ser mayor a cero.")
+        return
 
     for item in stock:
-        if item["nombre"] == producto:
+        if item["nombre"].lower() == producto.lower():
             if item["cantidad"] < cantidad:
                 print(f"Stock insuficiente. Hay {item['cantidad']} unidades disponibles.")
                 return
 
             item["cantidad"] -= cantidad
-            print(f"{cantidad} unidades de '{producto}' fueron eliminadas. Cantidad actual: {item['cantidad']}")
+            guardar_datos(usuarios, stock, ventas, transacciones)
+            print(f"{cantidad} unidades de '{item['nombre']}' fueron eliminadas. Cantidad actual: {item['cantidad']}")
             return
 
     print(f"'{producto}' no se encuentra en la lista de productos.")
 
+
 def buscar_producto(stock):
-    """Busca un producto en la lista y muestra toda su información, avisa sí no existe."""
+    """Busca un producto en la lista y muestra toda su informacion, avisa si no existe."""
 
-    producto = input("\nNombre del producto a buscar: ")
+    producto = input("\nNombre del producto a buscar: ").strip()
 
-    resultado = list(filter(lambda x: x["nombre"] == producto, stock))
+    resultado = list(filter(lambda x: x["nombre"].lower() == producto.lower(), stock))
 
     if resultado:
         item = resultado[0]
-        print(f"\nProducto: {item['nombre']} \nDescripcion: {item['descripcion']} \nPrecio: {item['precio']} \nCantidad: {item['cantidad']} \nCategoria: {item['categoria']}")
-
+        try:
+            print(f"\nProducto: {item['nombre']} \nDescripcion: {item['descripcion']} \nPrecio: {item['precio']} \nCantidad: {item['cantidad']} \nCategoria: {item['categoria']}")
+        except KeyError:
+            print("Error: el producto existe, pero tiene datos incompletos.")
     else:
         print(f"El producto '{producto}' no se encuentra en la lista.")
 
+
 def ofertas(stock):
-    """Muestra la lista de productos que estan en oferta y muestra el precio de oferta"""
+    """Muestra la lista de productos que estan en oferta y muestra el precio de oferta."""
 
     print("\n=== Juegos en oferta ===")
     print(f"{'Producto':<20} {'Stock':>10} {'Precio':>10} {'Oferta':>10}")
@@ -206,31 +361,36 @@ def ofertas(stock):
 
     hay_ofertas = False
 
-    for item in stock:
-        if item["oferta"] == True:
-            hay_ofertas = True
-            precio_original = item["precio"]
-            precio_oferta = precio_original * 0.8  # 20% de descuento
+    try:
+        for item in stock:
+            if item["oferta"] == True:
+                hay_ofertas = True
+                precio_original = item["precio"]
+                precio_oferta = precio_original * 0.8  # 20% de descuento
 
-            print(f"{item['nombre']:<20} {item['cantidad']:>10} {precio_original:>10.2f} {precio_oferta:>10.2f}")
+                print(f"{item['nombre']:<20} {item['cantidad']:>10} {precio_original:>10.2f} {precio_oferta:>10.2f}")
 
-    if not hay_ofertas:
-        print("No hay juegos en oferta")
+        if not hay_ofertas:
+            print("No hay juegos en oferta")
+
+    except KeyError:
+        print("Error: hay productos cargados con datos incompletos.")
+
 
 # ==================== FUNCIONES DE VENTAS ====================
 
 def registrar_venta(stock, ventas, transacciones):
     """Registra una nueva venta. Pide el producto y la cantidad, verifica stock
-    y aplica descuento si está en oferta. Guarda la venta en la lista
-    y registra automáticamente la transacción de ingreso correspondiente."""
+    y aplica descuento si esta en oferta. Guarda la venta en la lista
+    y registra automaticamente la transaccion de ingreso correspondiente."""
 
     print("\n=== Registrar nueva venta ===\n")
 
     lista_productos(stock)
 
-    producto = input("\nNombre del producto a vender: ")
+    producto = input("\nNombre del producto a vender: ").strip()
 
-    resultado = list(filter(lambda x: x["nombre"] == producto, stock))
+    resultado = list(filter(lambda x: x["nombre"].lower() == producto.lower(), stock))
 
     if not resultado:
         print(f"El producto '{producto}' no se encuentra en el stock.")
@@ -239,10 +399,10 @@ def registrar_venta(stock, ventas, transacciones):
     item = resultado[0]
 
     if item["cantidad"] == 0:
-        print(f"No hay unidades disponibles de '{producto}'.")
+        print(f"No hay unidades disponibles de '{item['nombre']}'.")
         return
 
-    cantidad = int(input(f"Cantidad a vender (disponibles: {item['cantidad']}): "))
+    cantidad = pedir_entero(f"Cantidad a vender (disponibles: {item['cantidad']}): ")
 
     if cantidad <= 0:
         print("La cantidad debe ser mayor a cero.")
@@ -262,84 +422,92 @@ def registrar_venta(stock, ventas, transacciones):
 
     item["cantidad"] -= cantidad
 
-    id_venta = len(ventas) + 1
+    id_venta = generar_id(ventas)
     ventas.append({
         "id": id_venta,
-        "producto": producto,
+        "producto": item["nombre"],
         "cantidad": cantidad,
         "precio_unitario": precio_unitario,
         "total": total
     })
 
     fecha_venta = input("Fecha de la venta (dd/mm/aaaa): ")
-    id_transaccion = len(transacciones) + 1
+    id_transaccion = generar_id(transacciones)
     transacciones.append({
         "id": id_transaccion,
         "tipo": "ingreso",
         "monto": total,
-        "descripcion": f"Venta de {cantidad}x {producto}",
+        "descripcion": f"Venta de {cantidad}x {item['nombre']}",
         "fecha": fecha_venta
     })
 
-    print("\nVenta registrada exitosamente.")
-    print(f"  Producto : {producto}\n  Cantidad : {cantidad}\n  Precio   : ${precio_unitario:.2f} por unidad\n  Total    : ${total:.2f}")
-    # print(f"  Cantidad : {cantidad}")
-    # print(f"  Precio   : ${precio_unitario:.2f} por unidad")
-    # print(f"  Total    : ${total:.2f}")
+    guardar_datos(usuarios, stock, ventas, transacciones)
+
+    print(f"\nVenta registrada exitosamente.")
+    print(f"  Producto : {item['nombre']}")
+    print(f"  Cantidad : {cantidad}")
+    print(f"  Precio   : ${precio_unitario:.2f} por unidad")
+    print(f"  Total    : ${total:.2f}")
+
 
 def resumen_ventas(ventas):
-    """Muestra un resumen general: cantidad de ventas, producto más vendido y total recaudado."""
+    """Muestra un resumen general: cantidad de ventas, producto mas vendido y total recaudado."""
 
     if not ventas:
         print("\nNo hay ventas para mostrar en el resumen.")
         return
 
-    total_recaudado = sum(map(lambda x: x["total"], ventas))
-    cantidad_ventas = len(ventas)
+    try:
+        total_recaudado = sum(map(lambda x: x["total"], ventas))
+        cantidad_ventas = len(ventas)
 
-    productos = []
-    cantidades = []
+        productos = []
+        cantidades = []
 
-    for v in ventas:
-        encontrado = False
-        i = 0
-        while i < len(productos) and not encontrado:
-            if productos[i] == v["producto"]:
-                cantidades[i] += v["cantidad"]
-                encontrado = True
-            i += 1
-        if not encontrado:
-            productos.append(v["producto"])
-            cantidades.append(v["cantidad"])
+        for v in ventas:
+            encontrado = False
+            i = 0
+            while i < len(productos) and not encontrado:
+                if productos[i] == v["producto"]:
+                    cantidades[i] += v["cantidad"]
+                    encontrado = True
+                i += 1
+            if not encontrado:
+                productos.append(v["producto"])
+                cantidades.append(v["cantidad"])
 
-    mas_vendido = None
-    mayor_cantidad = 0
+        mas_vendido = None
+        mayor_cantidad = 0
 
-    for i in range(len(productos)):
-        if cantidades[i] > mayor_cantidad:
-            mayor_cantidad = cantidades[i]
-            mas_vendido = productos[i]
+        for i in range(len(productos)):
+            if cantidades[i] > mayor_cantidad:
+                mayor_cantidad = cantidades[i]
+                mas_vendido = productos[i]
 
-    print("\n=== Resumen de ventas ===")
-    print(f"  Ventas realizadas   : {cantidad_ventas}")
-    print(f"  Producto más vendido: {mas_vendido} ({mayor_cantidad} unidades)")
-    print(f"  Total recaudado     : ${total_recaudado:.2f}")
+        print("\n=== Resumen de ventas ===")
+        print(f"  Ventas realizadas   : {cantidad_ventas}")
+        print(f"  Producto mas vendido: {mas_vendido} ({mayor_cantidad} unidades)")
+        print(f"  Total recaudado     : ${total_recaudado:.2f}")
+
+    except KeyError:
+        print("Error: hay ventas con datos incompletos.")
+
 
 # ==================== FUNCIONES DE TRANSACCIONES ====================
 
 def registrar_transaccion(transacciones):
-    """Registra manualmente una transacción de ingreso o egreso con monto y descripción."""
+    """Registra manualmente una transaccion de ingreso o egreso con monto y descripcion."""
 
-    print("\n=== Registrar nueva transacción ===\n")
+    print("\n=== Registrar nueva transaccion ===\n")
 
-    tipo = input("Tipo de transacción (ingreso/egreso): ")
+    tipo = input("Tipo de transaccion (ingreso/egreso): ").strip().lower()
 
     if tipo not in ["ingreso", "egreso"]:
-        print("Tipo inválido. Debe ser 'ingreso' o 'egreso'.")
+        print("Tipo invalido. Debe ser 'ingreso' o 'egreso'.")
         return
 
-    descripcion = input("Descripción: ")
-    monto = float(input("Monto: $"))
+    descripcion = input("Descripcion: ").strip()
+    monto = pedir_float("Monto: $")
 
     if monto <= 0:
         print("El monto debe ser mayor a cero.")
@@ -347,7 +515,7 @@ def registrar_transaccion(transacciones):
 
     fecha = input("Fecha (dd/mm/aaaa): ")
 
-    id_transaccion = len(transacciones) + 1
+    id_transaccion = generar_id(transacciones)
     transacciones.append({
         "id": id_transaccion,
         "tipo": tipo,
@@ -356,11 +524,14 @@ def registrar_transaccion(transacciones):
         "fecha": fecha
     })
 
-    print(f"\nTransacción registrada exitosamente.")
+    guardar_datos(usuarios, stock, ventas, transacciones)
+
+    print(f"\nTransaccion registrada exitosamente.")
     print(f"  Tipo        : {tipo}")
-    print(f"  Descripción : {descripcion}")
+    print(f"  Descripcion : {descripcion}")
     print(f"  Monto       : ${monto:.2f}")
     print(f"  Fecha       : {fecha}")
+
 
 def resumen_transacciones(transacciones):
     """Muestra el total de ingresos, egresos y el balance final."""
@@ -369,36 +540,41 @@ def resumen_transacciones(transacciones):
         print("\nNo hay transacciones para mostrar en el resumen.")
         return
 
-    ingresos = list(filter(lambda x: x["tipo"] == "ingreso", transacciones))
-    egresos  = list(filter(lambda x: x["tipo"] == "egreso",  transacciones))
+    try:
+        ingresos = list(filter(lambda x: x["tipo"] == "ingreso", transacciones))
+        egresos  = list(filter(lambda x: x["tipo"] == "egreso",  transacciones))
 
-    total_ingresos = sum(map(lambda x: x["monto"], ingresos))
-    total_egresos  = sum(map(lambda x: x["monto"], egresos))
-    balance        = total_ingresos - total_egresos
+        total_ingresos = sum(map(lambda x: x["monto"], ingresos))
+        total_egresos  = sum(map(lambda x: x["monto"], egresos))
+        balance        = total_ingresos - total_egresos
 
-    print("\n=== Resumen de transacciones ===")
-    print(f"  Ingresos totales : ${total_ingresos:.2f}")
-    print(f"  Egresos totales  : ${total_egresos:.2f}")
-    print(f"  Balance          : ${balance:.2f}")
+        print("\n=== Resumen de transacciones ===")
+        print(f"  Ingresos totales : ${total_ingresos:.2f}")
+        print(f"  Egresos totales  : ${total_egresos:.2f}")
+        print(f"  Balance          : ${balance:.2f}")
 
-# ==================== MENÚS ====================
+    except KeyError:
+        print("Error: hay transacciones con datos incompletos.")
+
+
+# ==================== MENUS ====================
 
 def menu_ventas(stock, ventas, transacciones):
-    """Muestra el menú de gestión de ventas y transacciones."""
+    """Muestra el menu de gestion de ventas y transacciones."""
 
     continuar = True
 
     while continuar:
         print(
-            "\n=== Menú de ventas ===" \
+            "\n=== Menu de ventas ===" \
             "\n1. Registrar nueva venta" \
             "\n2. Ver resumen de ventas" \
-            "\n3. Registrar transacción manual" \
+            "\n3. Registrar transaccion manual" \
             "\n4. Ver resumen de transacciones" \
-            "\n5. Volver al menú principal"
+            "\n5. Volver al menu principal"
         )
 
-        opcion = input("\nIngrese una opción: ")
+        opcion = input("\nIngrese una opcion: ")
 
         if opcion == "1":
             registrar_venta(stock, ventas, transacciones)
@@ -416,25 +592,25 @@ def menu_ventas(stock, ventas, transacciones):
             continuar = False
 
         else:
-            print("Opción inválida.")
+            print("Opcion invalida.")
+
 
 def menu_stock(stock, transacciones):
-    """Muestra el menú de manejo de los productos."""
-
+    """Muestra el menu de manejo de los productos."""
     continuar = True
 
     while continuar:
         print(
-            "\n=== Menú de manejo de stock ===" \
+            "\n=== Menu de manejo de stock ===" \
             "\n1. Ver la lista de productos completa" \
             "\n2. Eliminar unidades" \
             "\n3. Agregar producto" \
             "\n4. Buscar producto" \
             "\n5. Ver juegos en oferta" \
-            "\n6. Volver al menú principal"
+            "\n6. Volver al menu principal"
         )
 
-        opcion = input("\nIngrese una opción: ")
+        opcion = input("\nIngrese una opcion: ")
 
         if opcion == "1":
             lista_productos(stock)
@@ -455,22 +631,22 @@ def menu_stock(stock, transacciones):
             continuar = False
 
         else:
-            print("Opción inválida.")
+            print("Opcion invalida.")
+
 
 def menu_usuarios(usuarios):
-    """Muestra el menú de manejo de usuarios."""
-    
+    """Muestra el menu de manejo de usuarios."""
     continuar = True
 
     while continuar:
         print(
-            "\n=== Menú de usuarios ===" \
+            "\n=== Menu de usuarios ===" \
             "\n1. Ver usuarios registrados" \
-            "\n2. Registar nuevo usuario" \
-            "\n3. Volver al menú principal"
+            "\n2. Registrar nuevo usuario" \
+            "\n3. Volver al menu principal"
         )
 
-        opcion = input("\nIngrese una opción: ")
+        opcion = input("\nIngrese una opcion: ")
 
         if opcion == "1":
             imprimir_usuarios(usuarios)
@@ -482,10 +658,11 @@ def menu_usuarios(usuarios):
             continuar = False
 
         else:
-            print("Opción inválida.")
+            print("Opcion invalida.")
+
 
 def menu_principal(stock, ventas, usuarios, transacciones):
-    """Menu principal donde el usuario decide si gestionar los productos, usuarios o ventas."""
+    """Menu principal donde el usuario decide si gestionar productos, usuarios o ventas."""
 
     print("\nBienvenido al sistema de venta de videojuegos")
 
@@ -494,12 +671,12 @@ def menu_principal(stock, ventas, usuarios, transacciones):
     while continuar:
         print(
             "\n=============================" \
-            "\nSISTEMA DE GESTIÓN - GRUPO 4" \
+            "\nSISTEMA DE GESTION - GRUPO 4" \
             "\n=============================" \
             "\n1. Gestion de Productos" \
             "\n2. Gestion de Usuarios" \
             "\n3. Gestion de Ventas" \
-            "\n4. Cerrar sesión"
+            "\n4. Cerrar sesion"
         )
 
         n = input("\nIngrese una de las opciones: ")
@@ -514,33 +691,21 @@ def menu_principal(stock, ventas, usuarios, transacciones):
             menu_ventas(stock, ventas, transacciones)
 
         elif n == "4":
-            print("\nCerrando sesión.\n")
+            guardar_datos(usuarios, stock, ventas, transacciones)
+            print("\nCerrando sesion.\n")
             continuar = False
 
         else:
-            print("Número inválido. Ingrese una opción válida.")
+            print("Numero invalido. Ingrese una opcion valida.")
+
 
 # ==================== MAIN ====================
 
-usuarios = [  # claves: id, nombre, email, clave, rol
-    {"id": 1, "nombre": "ag", "email": "agu@mail", "clave": "123", "rol": "administrador"},
-    {"id": 2, "nombre": "martina", "email": "martina@mail", "clave": "123", "rol": "administrador"}
-]
-
+usuarios, stock, ventas, transacciones = cargar_datos()
 emails_registrados = set(u["email"] for u in usuarios)
 
-stock = [  # claves: nombre, descripcion, precio, cantidad, categoria, oferta
-    {"nombre": "Hollow Knight", "descripcion": "Metroidvania tipo soulslike 2D", "precio": 4.99, "cantidad": 8, "categoria": "metroidvania", "oferta": True},
-    {"nombre": "CupHead", "descripcion": "Plataformero de acción clasico 2D", "precio": 19.99, "cantidad": 10, "categoria": "plataformas", "oferta": True}
-]
-
-<<<<<<< HEAD
-ventas = [ #ID - producto - cantidad - precio_unitario - total
-
-] 
-=======
-ventas = []           # claves: id, producto, cantidad, precio_unitario, total
-transacciones = []    # claves: id, tipo, monto, descripcion, fecha
->>>>>>> fc737dee44f2ac6eecea02acd5c109b87f6cb6fb
-
-inicio()
+try:
+    inicio()
+except KeyboardInterrupt:
+    guardar_datos(usuarios, stock, ventas, transacciones)
+    print("\n\nPrograma interrumpido. Los datos fueron guardados antes de cerrar.")
