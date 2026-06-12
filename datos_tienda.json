@@ -1,0 +1,54 @@
+{
+    "usuarios": [
+        {
+            "id": 1,
+            "nombre": "ag",
+            "email": "agu@mail.com",
+            "clave": "123",
+            "rol": "administrador"
+        },
+        {
+            "id": 2,
+            "nombre": "martina",
+            "email": "martina@mail.com",
+            "clave": "123",
+            "rol": "administrador"
+        }
+    ],
+    "stock": [
+        {
+            "nombre": "Hollow Knight",
+            "descripcion": "Metroidvania tipo soulslike 2D",
+            "precio": 4.99,
+            "cantidad": 8,
+            "categoria": "metroidvania",
+            "oferta": true
+        },
+        {
+            "nombre": "CupHead",
+            "descripcion": "Plataformero de accion clasico 2D",
+            "precio": 19.99,
+            "cantidad": 10,
+            "categoria": "plataformas",
+            "oferta": true
+        },
+        {
+            "nombre": "Hades",
+            "descripcion": "Roguelite 2D top-down",
+            "precio": 4.99,
+            "cantidad": 5,
+            "categoria": "Roguelite",
+            "oferta": false
+        }
+    ],
+    "ventas": [],
+    "transacciones": [
+        {
+            "id": 1,
+            "tipo": "egreso",
+            "monto": 24.950000000000003,
+            "descripcion": "Compra de 5x Hades",
+            "fecha": "12/06/2026"
+        }
+    ]
+}

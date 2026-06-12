@@ -46,16 +46,6 @@ def cargar_datos():
         print("\nNo se encontro el archivo de datos. Se inicia el sistema con datos iniciales.")
         return datos_iniciales()
 
-    except json.JSONDecodeError:
-        print("\nError: el archivo de datos esta dañado o tiene un formato incorrecto.")
-        print("Se inicia el sistema con datos iniciales para evitar que el programa se cierre.")
-        return datos_iniciales()
-
-    except OSError:
-        print("\nError al intentar leer el archivo de datos.")
-        print("Se inicia el sistema con datos iniciales.")
-        return datos_iniciales()
-
 
 def guardar_datos(usuarios, stock, ventas, transacciones):
     """Guarda usuarios, stock, ventas y transacciones en un archivo JSON."""
@@ -65,16 +55,16 @@ def guardar_datos(usuarios, stock, ventas, transacciones):
         "ventas": ventas,
         "transacciones": transacciones
     }
-
+    
     try:
         archivo = open(ARCHIVO_DATOS, "w", encoding="utf-8")
         json.dump(datos, archivo, indent=4, ensure_ascii=False)
         archivo.close()
         return True
 
-    except OSError:
-        print("\nError: no se pudieron guardar los datos en el archivo.")
-        return False
+    except FileNotFoundError:
+            print("\nNo se encontro el archivo de datos. Se inicia el sistema con datos iniciales.")
+            return datos_iniciales()
 
 
 # ==================== FUNCIONES DE VALIDACION Y EXCEPCIONES ====================
