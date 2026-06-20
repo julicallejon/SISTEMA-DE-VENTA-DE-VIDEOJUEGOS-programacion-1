@@ -1,0 +1,104 @@
+{
+    "usuarios": [
+        {
+            "id": 1,
+            "nombre": "ag",
+            "email": "agu@mail.com",
+            "clave": "123",
+            "rol": "administrador"
+        },
+        {
+            "id": 2,
+            "nombre": "martina",
+            "email": "martina@mail.com",
+            "clave": "123",
+            "rol": "administrador"
+        },
+        {
+            "id": 3,
+            "nombre": "sofia",
+            "email": "s@gmail.com",
+            "clave": "345",
+            "rol": "administrador"
+        },
+        {
+            "id": 4,
+            "nombre": "julieta",
+            "email": "ju@gmail.com",
+            "clave": "1234",
+            "rol": "administrador"
+        },
+        {
+            "id": 5,
+            "nombre": "marcos",
+            "email": "marquitos123@gmail.com",
+            "clave": "marcossoy",
+            "rol": "administrador"
+        },
+        {
+            "id": 6,
+            "nombre": "lola",
+            "email": "lolalavaca@gmail.com",
+            "clave": "moo",
+            "rol": "administrador"
+        },
+        {
+            "id": 7,
+            "nombre": "ejemplo",
+            "email": "ejemplo@gmail.com",
+            "clave": "ejemplo",
+            "rol": "administrador"
+        }
+    ],
+    "stock": [
+        {
+            "nombre": "Hollow Knight",
+            "descripcion": "Metroidvania tipo soulslike 2D",
+            "precio": 4.99,
+            "cantidad": 8,
+            "categoria": "metroidvania",
+            "oferta": true
+        },
+        {
+            "nombre": "CupHead",
+            "descripcion": "Plataformero de accion clasico 2D",
+            "precio": 19.99,
+            "cantidad": 10,
+            "categoria": "plataformas",
+            "oferta": true
+        },
+        {
+            "nombre": "Hades",
+            "descripcion": "Roguelite 2D top-down",
+            "precio": 4.99,
+            "cantidad": 5,
+            "categoria": "Roguelite",
+            "oferta": false
+        },
+        {
+            "nombre": "Hades 2",
+            "descripcion": "Lucha",
+            "precio": 120000.0,
+            "cantidad": 0,
+            "categoria": "mitología",
+            "oferta": false
+        }
+    ],
+    "ventas": [],
+    "transacciones": [
+        {
+            "id": 1,
+            "tipo": "egreso",
+            "monto": 24.950000000000003,
+            "descripcion": "Compra de 5x Hades",
+            "fecha": "12/06/2026"
+        },
+        {
+            "id": 2,
+            "tipo": "egreso",
+            "monto": 240000.0,
+            "descripción": "Compra de 2x Hades 2",
+            "fecha": "10/06/26"
+        }
+    ]
+}
